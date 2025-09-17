@@ -1,0 +1,313 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Keerana Store - Demo</title>
+  <style>
+    :root{
+      --bg:#f6f8fa; --card:#ffffff; --muted:#6b7280; --accent:#0ea5a4; --accent-2:#0f766e; --glass: rgba(255,255,255,0.6);
+      --shadow: 0 6px 18px rgba(16,24,40,0.08);
+    }
+    *{box-sizing:border-box;font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial}
+    body{margin:0; background:linear-gradient(180deg, #f3f9fb 0%, var(--bg) 100%); color:#0f172a}
+    .container{max-width:1100px; margin:28px auto; padding:20px}
+    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .mark{width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .card{background:var(--card);border-radius:14px;padding:18px;box-shadow:var(--shadow);}.grid{display:grid;grid-template-columns:360px 1fr;gap:18px}
+
+/* Login panel */
+.login-section{padding:18px}
+.btn{background:var(--accent);color:white;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;font-weight:600}
+.btn.alt{background:transparent;color:var(--accent-2);border:1px solid rgba(15,118,110,0.12)}
+.small{font-size:13px;color:var(--muted)}
+input[type=text], input[type=number], input[type=password], select, textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #e6edf2;margin-top:8px}
+
+.tabs{display:flex;gap:8px;margin:12px 0}
+.tab{flex:1;padding:10px;border-radius:10px;text-align:center;cursor:pointer}
+.tab.active{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white}
+
+/* product list */
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.product{border-radius:12px;padding:12px;background:linear-gradient(180deg, rgba(255,255,255,0.9), var(--glass));box-shadow:0 6px 18px rgba(15,118,110,0.04);display:flex;gap:10px;align-items:center}
+.product img{width:64px;height:64px;object-fit:cover;border-radius:8px}
+.product .meta{flex:1}
+.price{font-weight:700}
+.muted{color:var(--muted);font-size:13px}
+
+/* cart and bill */
+.cart{position:sticky;top:24px}
+.cart .line{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed #eee}
+.total{font-size:18px;font-weight:800}
+
+.form-row{display:flex;gap:8px}
+.form-row > *{flex:1}
+
+.history-list{max-height:220px;overflow:auto}
+.item-actions{display:flex;gap:6px}
+
+/* responsive */
+@media (max-width:880px){.grid{grid-template-columns:1fr} .container{padding:12px} .card{padding:12px}}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <div class="mark">KS</div>
+        <div>
+          <div style="font-weight:800;font-size:18px">Keerana Store</div>
+          <div class="small">Simple demo — Admin & Customer flows (local-only)</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <div class="small">Demo mode: stores data in your browser (localStorage)</div>
+      </div>
+    </header><div class="grid">
+  <div class="card login-section">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 id="panelTitle">Login / Start</h3>
+      <div class="tabs">
+        <div id="tabCustomer" class="tab active">Customer</div>
+        <div id="tabAdmin" class="tab">Admin</div>
+      </div>
+    </div>
+
+    <div id="customerPanel">
+      <label class="small">Customer name</label>
+      <input id="customerName" type="text" placeholder="Enter customer name" />
+      <div style="height:8px"></div>
+      <button class="btn" id="customerLoginBtn">Continue as Customer</button>
+      <div style="height:12px"></div>
+      <div class="small">OR browse as guest and generate bill (name optional).</div>
+    </div>
+
+    <div id="adminPanel" style="display:none">
+      <label class="small">Admin password</label>
+      <input id="adminPass" type="password" placeholder="Enter admin password" />
+      <div style="height:8px"></div>
+      <button class="btn" id="adminLoginBtn">Login as Admin</button>
+      <div style="height:12px"></div>
+      <div class="small">Default admin password (demo): <code>admin123</code></div>
+    </div>
+
+    <hr style="margin:12px 0">
+
+    <div class="card" style="margin-top:8px">
+      <h4 style="margin:0 0 8px 0">Search products</h4>
+      <input id="search" type="text" placeholder="Search by name" />
+    </div>
+
+    <div style="height:12px"></div>
+    <div class="card">
+      <h4 style="margin:0 0 8px 0">Customer history</h4>
+      <label class="small">Search history by customer name</label>
+      <input id="historySearch" type="text" placeholder="Type customer name" />
+      <div style="height:8px"></div>
+      <div id="historyResults" class="history-list"></div>
+    </div>
+
+  </div>
+
+  <div>
+    <div class="card" style="margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <h2 style="margin:0">Products</h2>
+        <div class="small">Add to cart and build the bill</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="currentUser" class="small">Not logged in</div>
+        <button id="logoutBtn" class="btn alt" style="display:none">Logout</button>
+      </div>
+    </div>
+
+    <div class="card" style="padding:14px;margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Available items</h3>
+        <div class="small">You can set price per kg or custom price</div>
+      </div>
+      <div style="height:12px"></div>
+      <div id="products" class="products"></div>
+    </div>
+
+    <div id="adminControls" class="card" style="display:none">
+      <h3 style="margin-top:0">Admin controls — Add / Edit items</h3>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:2;min-width:260px">
+          <label class="small">Product name</label>
+          <input id="pname" type="text" placeholder="e.g., Wheat Flour" />
+
+          <div style="height:8px"></div>
+          <label class="small">Set price mode</label>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <select id="priceMode">
+              <option value="perkg">Price per 1 kg</option>
+              <option value="fixed">Fixed price (manual)</option>
+            </select>
+            <input id="pprice" type="number" placeholder="Enter price (₹)" />
+          </div>
+
+          <div style="height:8px"></div>
+          <label class="small">Upload image (optional)</label>
+          <input id="pimage" type="file" accept="image/*" />
+          <div style="height:8px"></div>
+          <img id="preview" src="" alt="preview" style="width:96px;height:96px;object-fit:cover;border-radius:8px;display:none;border:1px solid #eee" />
+
+          <div style="height:10px"></div>
+          <button id="addItemBtn" class="btn">Add / Update item</button>
+        </div>
+
+        <div style="flex:1;min-width:220px">
+          <h4 style="margin:0 0 8px 0">Items quick edit</h4>
+          <div id="adminItemList" style="max-height:260px;overflow:auto"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card cart">
+      <h3 style="margin-top:0">Cart / Bill</h3>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input id="billCustomerName" type="text" placeholder="Customer name (for record)" />
+        <input id="billDiscount" type="number" placeholder="Discount (₹) - Admin only" />
+      </div>
+
+      <div id="cartList"></div>
+      <div style="height:10px"></div>
+      <div class="line" style="display:flex;justify-content:space-between"><div class="muted">Subtotal</div><div id="subtotal" class="muted">₹0</div></div>
+      <div class="line" style="display:flex;justify-content:space-between"><div class="muted">Discount</div><div id="discAmount" class="muted">₹0</div></div>
+      <div class="line" style="display:flex;justify-content:space-between"><div class="total">Total</div><div id="totalAmount" class="total">₹0</div></div>
+
+      <div style="height:10px"></div>
+      <div style="display:flex;gap:8px">
+        <button id="generateBillBtn" class="btn">Generate Bill</button>
+        <button id="clearCartBtn" class="btn alt">Clear Cart</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+  </div><script>
+// Simple demo logic: data in localStorage
+const ADMIN_PASS = 'admin123';
+let isAdmin = false;
+let currentUserName = '';
+let items = []; // {id,name,mode:'perkg'|'fixed',price,imageBase64}
+let cart = [];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+// ---------- persistence ----------
+function loadItems(){
+  const raw = localStorage.getItem('keerana_items');
+  items = raw ? JSON.parse(raw) : sampleItems();
+}
+function saveItems(){ localStorage.setItem('keerana_items', JSON.stringify(items)); }
+function loadBills(){ const raw=localStorage.getItem('keerana_bills'); return raw?JSON.parse(raw):[]; }
+function saveBill(bill){ const bills = loadBills(); bills.push(bill); localStorage.setItem('keerana_bills', JSON.stringify(bills)); }
+
+function sampleItems(){ return [
+  {id:uid(),name:'Wheat Flour',mode:'perkg',price:40,image:''},
+  {id:uid(),name:'Sugar',mode:'perkg',price:50,image:''},
+  {id:uid(),name:'Rice (Basmati)',mode:'perkg',price:120,image:''},
+  {id:uid(),name:'Olive Oil (500ml)',mode:'fixed',price:400,image:''}
+]; }
+
+// ---------- rendering ----------
+function renderProducts(filter=''){
+  const container = document.getElementById('products'); container.innerHTML = '';
+  const q = filter.trim().toLowerCase();
+  items.filter(it=>!q||it.name.toLowerCase().includes(q)).forEach(it=>{
+    const div = document.createElement('div'); div.className='product';
+    const img = document.createElement('img'); img.src = it.image || placeholder(it.name);
+    div.appendChild(img);
+    const meta = document.createElement('div'); meta.className='meta';
+    meta.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${escapeHtml(it.name)}</strong><div class='muted'>${it.mode==='perkg'? '₹'+it.price+' / 1 kg' : '₹'+it.price}</div></div>
+      <div class='item-actions'><button class='btn' onclick='addToCart("${it.id}")'>Add</button></div></div>`;
+    div.appendChild(meta);
+    container.appendChild(div);
+  })
+}
+
+function renderAdminItemList(){ const el=document.getElementById('adminItemList'); el.innerHTML='';
+  items.forEach(it=>{
+    const row=document.createElement('div'); row.style.padding='8px'; row.style.borderBottom='1px solid #f1f5f9';
+    row.innerHTML = `<div style='display:flex;justify-content:space-between;align-items:center'><div><strong>${escapeHtml(it.name)}</strong><div class='muted'>${it.mode==='perkg'? '₹'+it.price+' /kg':'₹'+it.price}</div></div>
+      <div style='display:flex;gap:6px'><button class='btn alt' onclick='editItem("${it.id}")'>Edit</button><button class='btn alt' onclick='deleteItem("${it.id}")'>Delete</button></div></div>`;
+    el.appendChild(row);
+  })
+}
+
+function renderCart(){ const list=document.getElementById('cartList'); list.innerHTML='';
+  cart.forEach((c,idx)=>{
+    const line=document.createElement('div'); line.className='line';
+    line.innerHTML = `<div style='display:flex;gap:10px;align-items:center'><div style='width:10px'></div>
+      <div><strong>${escapeHtml(c.name)}</strong><div class='muted'>${c.mode==='perkg'? c.qty+' kg': 'Qty: '+c.qty}</div></div></div>
+      <div style='text-align:right'><div class='muted'>₹${(c.unitPrice*c.qty).toFixed(2)}</div>
+      <div style='margin-top:6px;display:flex;gap:6px;justify-content:flex-end'><button class='btn alt' onclick='decrease(${idx})'>-</button><button class='btn alt' onclick='increase(${idx})'>+</button><button class='btn alt' onclick='removeItem(${idx})'>Remove</button></div></div>`;
+    list.appendChild(line);
+  })
+  updateTotals();
+}
+
+function updateTotals(){ const sub = cart.reduce((s,i)=>s + i.unitPrice * i.qty,0);
+  document.getElementById('subtotal').textContent = '₹' + sub.toFixed(2);
+  const disc = (isAdmin? Number(document.getElementById('billDiscount').value || 0) : 0);
+  document.getElementById('discAmount').textContent = '₹' + disc.toFixed(2);
+  const tot = Math.max(0, sub - disc);
+  document.getElementById('totalAmount').textContent = '₹' + tot.toFixed(2);
+}
+
+// ---------- cart ops ----------
+function addToCart(id){ const it = items.find(x=>x.id===id); if(!it) return; const qty = it.mode==='perkg'? 1 : 1; // default
+  // if perkg ask for weight
+  const qtyPrompt = it.mode==='perkg' ? prompt('Enter weight in kg (e.g., 0.5, 1):', '1') : prompt('Enter quantity (integer):', '1');
+  if(qtyPrompt===null) return; let q = parseFloat(qtyPrompt); if(isNaN(q) || q<=0) { alert('Invalid quantity'); return; }
+  const existingIndex = cart.findIndex(c=>c.id===id);
+  if(existingIndex>=0){ cart[existingIndex].qty += q; } else { cart.push({id:it.id,name:it.name,mode:it.mode,unitPrice:it.price,qty: q}); }
+  renderCart();
+}
+function increase(idx){ cart[idx].qty += (cart[idx].mode==='perkg'? 0.5 : 1); renderCart(); }
+function decrease(idx){ cart[idx].qty -= (cart[idx].mode==='perkg'? 0.5 : 1); if(cart[idx].qty<=0) cart.splice(idx,1); renderCart(); }
+function removeItem(idx){ cart.splice(idx,1); renderCart(); }
+function clearCart(){ if(!confirm('Clear cart?')) return; cart=[]; renderCart(); }
+
+// ---------- bill ----------
+function generateBill(){ if(cart.length===0){ alert('Cart empty'); return; }
+  const customerName = document.getElementById('billCustomerName').value.trim();
+  const discount = isAdmin? Number(document.getElementById('billDiscount').value || 0) : 0;
+  const subtotal = cart.reduce((s,i)=>s + i.unitPrice * i.qty,0);
+  const total = Math.max(0, subtotal - discount);
+  const bill = { id: uid(), date: new Date().toISOString(), customer: customerName||'Guest', items: cart.map(c=>({name:c.name,qty:c.qty,unitPrice:c.unitPrice})), subtotal, discount, total };
+  saveBill(bill);
+  // simple printable invoice
+  const w = window.open('', '_blank');
+  const html = printableBillHtml(bill);
+  w.document.write(html); w.document.close();
+  cart=[]; renderCart();
+}
+function printableBillHtml(bill){
+  let rows = '';
+  bill.items.forEach(it=>rows += `<tr><td>${escapeHtml(it.name)}</td><td>${it.qty}</td><td>₹${it.unitPrice.toFixed(2)}</td><td>₹${(it.qty*it.unitPrice).toFixed(2)}</td></tr>`);
+  return `<!doctype html><html><head><meta charset='utf-8'><title>Bill ${bill.id}</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid #eee}</style></head><body><h2>Keerana Store</h2><div>Bill ID: ${bill.id}</div><div>Date: ${new Date(bill.date).toLocaleString()}</div><div>Customer: ${escapeHtml(bill.customer)}</div><br><table><thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Amount</th></tr></thead><tbody>${rows}</tbody></table><h3>Subtotal: ₹${bill.subtotal.toFixed(2)}</h3><h3>Discount: ₹${bill.discount.toFixed(2)}</h3><h2>Total: ₹${bill.total.toFixed(2)}</h2><br><div>Thank you!</div></body></html>`;}
+
+// ---------- admin item CRUD ---------- function handleImageUpload(file, cb){ if(!file) return cb(''); const reader = new FileReader(); reader.onload = e=>cb(e.target.result); reader.readAsDataURL(file); }
+
+function addOrUpdateItem(){ const name = document.getElementById('pname').value.trim(); const mode = document.getElementById('priceMode').value; const price = Number(document.getElementById('pprice').value); if(!name || isNaN(price) || price<=0){ alert('Enter valid name and price'); return; } const file = document.getElementById('pimage').files[0]; handleImageUpload(file, (base)=>{ // if editing (hidden id stored) const editId = document.getElementById('pname').dataset.editId; if(editId){ const it = items.find(x=>x.id===editId); if(it){ it.name=name; it.mode=mode; it.price=price; if(base) it.image=base; document.getElementById('pname').dataset.editId=''; } } else { items.push({id:uid(),name,mode,price,image: base||''}); } saveItems(); renderProducts(document.getElementById('search').value); renderAdminItemList(); resetAddForm(); }); } function editItem(id){ const it = items.find(x=>x.id===id); if(!it) return; document.getElementById('pname').value=it.name; document.getElementById('priceMode').value=it.mode; document.getElementById('pprice').value=it.price; document.getElementById('pname').dataset.editId = it.id; if(it.image){ document.getElementById('preview').src = it.image; document.getElementById('preview').style.display='block'; } } function deleteItem(id){ if(!confirm('Delete item?')) return; items = items.filter(x=>x.id!==id); saveItems(); renderProducts(document.getElementById('search').value); renderAdminItemList(); } function resetAddForm(){ document.getElementById('pname').value=''; document.getElementById('pprice').value=''; document.getElementById('pimage').value=''; document.getElementById('preview').style.display='none'; }
+
+// ---------- history search ---------- function searchHistory(name){ const all = loadBills(); const q = name.trim().toLowerCase(); const res = q? all.filter(b=>b.customer.toLowerCase().includes(q)) : []; const el = document.getElementById('historyResults'); el.innerHTML=''; res.forEach(b=>{ const d = document.createElement('div'); d.style.padding='8px'; d.style.borderBottom='1px solid #f1f5f9'; d.innerHTML = <div style='display:flex;justify-content:space-between'><div><strong>${escapeHtml(b.customer)}</strong><div class='muted'>${new Date(b.date).toLocaleString()}</div></div><div><div class='muted'>Total: ₹${b.total.toFixed(2)}</div><div style='height:6px'></div><button class='btn alt' onclick='openBill("${b.id}")'>View</button></div></div>; el.appendChild(d); }); } function openBill(id){ const bills = loadBills(); const b = bills.find(x=>x.id===id); if(!b) return; const w=window.open('','_blank'); w.document.write(printableBillHtml(b)); w.document.close(); }
+
+// ---------- helpers & init ---------- function placeholder(text){ return 'data:image/svg+xml;utf8,' + encodeURIComponent(<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="100%" height="100%" fill="#eef2f6"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9aa6b2" font-size="16">${escapeHtml(text)}</text></svg>); } function escapeHtml(s){ return String(s).replaceAll('&','&').replaceAll('<','<').replaceAll('>','>').replaceAll('"','"'); }
+
+// ---------- UI wiring ---------- document.getElementById('tabCustomer').addEventListener('click', ()=>{ togglePanel('customer'); }); document.getElementById('tabAdmin').addEventListener('click', ()=>{ togglePanel('admin'); });
+
+document.getElementById('customerLoginBtn').addEventListener('click', ()=>{ currentUserName = document.getElementById('customerName').value.trim() || 'Guest'; isAdmin = false; afterLogin(); });
+
+document.getElementById('adminLoginBtn').addEventListener('click', ()=>{ const p = document.getElementById('adminPass').value; if(p===ADMIN_PASS){ isAdmin=true; currentUserName='Admin'; afterLogin(); } else { alert('Wrong password'); } });
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{ isAdmin=false; currentUserName=''; document.getElementById('currentUser').textContent='Not logged in'; document.getElementById('logoutBtn').style.display='none'; document.getElementById('adminControls').style.display='none'; document.getElementById('billDiscount').disabled=false; });
+
+document.getElementById('search').addEventListener('input', (e)=>renderProducts(e.target.value)); document.getElementById('addItemBtn').addEventListener('click', addOrUpdateItem); document.getElementById('pimage').addEventListener('change', (e)=>{ const f = e.target.files[0]; if(!f) return; const
